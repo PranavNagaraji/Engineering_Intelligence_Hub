@@ -1,0 +1,22 @@
+package com.pranav.engineering_intelligence_hub.entity;
+
+public enum AuditEvent {
+
+    TEAM_CREATED,
+
+    PROJECT_CREATED,
+
+    DOCUMENT_CREATED,
+    DOCUMENT_DELETED,
+
+    INCIDENT_CREATED,
+    INCIDENT_STARTED,
+    INCIDENT_RESOLVED,
+    INCIDENT_CLOSED,
+
+    USER_ASSIGNED_TO_TEAM,
+    USER_REMOVED_FROM_TEAM,
+
+    USER_PROMOTED,
+    USER_DEMOTED
+}
