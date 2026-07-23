@@ -1,6 +1,8 @@
 package com.pranav.engineering_intelligence_hub.service;
 
+import com.pranav.engineering_intelligence_hub.entity.AuditEvent;
 import com.pranav.engineering_intelligence_hub.entity.Role;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,17 +18,13 @@ import com.pranav.engineering_intelligence_hub.repository.TeamRepository;
 import com.pranav.engineering_intelligence_hub.repository.UserRepository;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
     
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final TeamRepository teamRepository;
-
-    public UserService(UserRepository userRepository, UserMapper userMapper, TeamRepository teamRepository) {
-        this.userRepository = userRepository;
-        this.userMapper = userMapper;
-        this.teamRepository = teamRepository;
-    }
+    private final AuditService auditService;
 
     public UserResponse getUserById(Long id){
         User user= userRepository.findById(id).orElseThrow(()-> new UserNotFoundException(id));
@@ -43,14 +41,28 @@ public class UserService {
     public UserResponse promoteToManager(Long id){
         User user=userRepository.findById(id).orElseThrow(()->new UserNotFoundException(id));
         user.setRole(Role.MANAGER);
-        return userMapper.toResponse(userRepository.save(user));
+        User currentUser=getCurrentUser();
+        User savedUser=userRepository.save(user);
+        auditService.log(
+                AuditEvent.USER_PROMOTED,
+                currentUser.getUsername(),
+                "Engineer promoted to Manager: "+savedUser.getUsername()
+        );
+        return userMapper.toResponse(savedUser);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     public UserResponse demoteToEngineer(Long id){
         User user=userRepository.findById(id).orElseThrow(()->new UserNotFoundException(id));
         user.setRole(Role.ENGINEER);
-        return userMapper.toResponse(userRepository.save(user));
+        User savedUser=userRepository.save(user);
+        User currentUser=getCurrentUser();
+        auditService.log(
+                AuditEvent.USER_DEMOTED,
+                currentUser.getUsername(),
+                "Engineer demoted: "+savedUser.getUsername()
+        );
+        return userMapper.toResponse(savedUser);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -58,7 +70,14 @@ public class UserService {
         User user=userRepository.findById(userId).orElseThrow(()->new UserNotFoundException(userId));
         Team team=teamRepository.findById(teamId).orElseThrow(()->new TeamNotFoundException(teamId));
         user.getTeams().add(team);
-        return userMapper.toResponse(userRepository.save(user));
+        User currentUser=getCurrentUser();
+        User savedUser=userRepository.save(user);
+        auditService.log(
+                AuditEvent.USER_ASSIGNED_TO_TEAM,
+                currentUser.getUsername(),
+                "Engineer assigned to team: "+savedUser.getUsername()
+        );
+        return userMapper.toResponse(savedUser);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -66,6 +85,13 @@ public class UserService {
         User user=userRepository.findById(userId).orElseThrow(()->new UserNotFoundException(userId));
         Team team=teamRepository.findById(teamId).orElseThrow(()->new TeamNotFoundException(teamId));
         user.getTeams().remove(team);
-        return userMapper.toResponse(userRepository.save(user));
+        User savedUser=userRepository.save(user);
+        User currentUser=getCurrentUser();
+        auditService.log(
+                AuditEvent.USER_REMOVED_FROM_TEAM,
+                currentUser.getUsername(),
+                "Engineer removed from team: "+savedUser.getUsername()
+        );
+        return userMapper.toResponse(savedUser);
     }
 }

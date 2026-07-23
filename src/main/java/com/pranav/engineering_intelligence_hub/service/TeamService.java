@@ -7,7 +7,6 @@ import com.pranav.engineering_intelligence_hub.entity.User;
 import com.pranav.engineering_intelligence_hub.exceptions.TeamAlreadyFoundException;
 import com.pranav.engineering_intelligence_hub.exceptions.TeamNotFoundException;
 import com.pranav.engineering_intelligence_hub.mapper.TeamMapper;
-import com.pranav.engineering_intelligence_hub.repository.AuditRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;

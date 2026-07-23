@@ -26,6 +26,7 @@ public class IncidentService {
     private final UserService userService;
     private final ProjectService projectService;
     private final IncidentMapper incidentMapper;
+    private final AuditService auditService;
 
     private Incident getIncident(Long id){
         Incident incident=incidentRepository.findById(id)
@@ -50,7 +51,13 @@ public class IncidentService {
         Incident incident=incidentMapper.toEntity(req);
         incident.setProject(project);
         incident.setAssignedEngineer(assignedUser);
-        return incidentMapper.toResponse(incidentRepository.save(incident));
+        Incident createdIncident=incidentRepository.save(incident);
+        auditService.log(
+                AuditEvent.INCIDENT_CREATED,
+                currentUser.getUsername(),
+                "Created Incident: "+createdIncident.getTitle()
+        );
+        return incidentMapper.toResponse(createdIncident);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','ENGINEER')")
@@ -88,7 +95,13 @@ public class IncidentService {
         }
         incidentStatusCheck(incident, IncidentStatus.OPEN, "Invalid incident Status");
         incident.setIncidentStatus(IncidentStatus.IN_PROGRESS);
-        return incidentMapper.toResponse(incidentRepository.save(incident));
+        Incident savedIncident=incidentRepository.save(incident);
+        auditService.log(
+                AuditEvent.INCIDENT_STARTED,
+                currentUser.getUsername(),
+                "Incident Started: "+savedIncident.getTitle()
+        );
+        return incidentMapper.toResponse(savedIncident);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'ENGINEER')")
@@ -100,7 +113,13 @@ public class IncidentService {
         }
         incidentStatusCheck(incident, IncidentStatus.IN_PROGRESS, "Invalid incident Status");
         incident.setIncidentStatus(IncidentStatus.RESOLVED);
-        return incidentMapper.toResponse(incidentRepository.save(incident));
+        Incident resolvedIncident=incidentRepository.save(incident);
+        auditService.log(
+                AuditEvent.INCIDENT_RESOLVED,
+                currentUser.getUsername(),
+                "Incident Resolved: "+resolvedIncident.getTitle()
+        );
+        return incidentMapper.toResponse(resolvedIncident);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
@@ -112,6 +131,12 @@ public class IncidentService {
         }
         incidentStatusCheck(incident, IncidentStatus.RESOLVED, "Invalid incident Status");
         incident.setIncidentStatus(IncidentStatus.CLOSED);
-        return incidentMapper.toResponse(incidentRepository.save(incident));
+        Incident closedIncident=incidentRepository.save(incident);
+        auditService.log(
+                AuditEvent.INCIDENT_CLOSED,
+                currentUser.getUsername(),
+                "Incident Closed: "+closedIncident.getTitle()
+        );
+        return incidentMapper.toResponse(closedIncident);
     }
 }

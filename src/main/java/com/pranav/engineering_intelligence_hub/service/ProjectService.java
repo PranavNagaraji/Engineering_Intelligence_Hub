@@ -34,8 +34,12 @@ public class ProjectService {
         Team team=teamRepository.findById(req.teamId()).orElseThrow(()-> new TeamNotFoundException(req.teamId()));
         Project project=projectMapper.toEntity(req, team);
         User currentUser=userService.getCurrentUser();
-        auditService.log(AuditEvent.PROJECT_CREATED, currentUser.getUsername(), "Created Project: "+project.getName());
-        return projectMapper.toResponse(projectRepository.save(project));
+        Project createdProject=projectRepository.save(project);
+        auditService.log(
+                AuditEvent.PROJECT_CREATED,
+                currentUser.getUsername(),
+                "Created Project: "+createdProject.getName());
+        return projectMapper.toResponse(createdProject);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','ENGINEER')")
