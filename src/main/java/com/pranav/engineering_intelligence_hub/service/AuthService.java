@@ -23,18 +23,17 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public AuthResponse login(AuthRequest request){
+    public String login(AuthRequest request){
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                     request.username(),
                     request.password()
             )
         );
-        String token=jwtService.generateToken(request.username());
-        return new AuthResponse("User logged in successfully", token);
+        return jwtService.generateToken(request.username());
     }
 
-    public AuthResponse register(RegisterRequest request){
+    public String register(RegisterRequest request){
         if(userRepository.existsByUsername(request.username()) || userRepository.existsByEmail(request.email())){
             throw new UserWithEmailOrUsernameFoundException();
         }
@@ -46,7 +45,6 @@ public class AuthService {
                 .password(password)
                 .build();
         User savedUser=userRepository.save(user);
-        String token=jwtService.generateToken(savedUser.getUsername());
-        return new AuthResponse("User registered successfully", token);
+        return jwtService.generateToken(savedUser.getUsername());
     }
 }
