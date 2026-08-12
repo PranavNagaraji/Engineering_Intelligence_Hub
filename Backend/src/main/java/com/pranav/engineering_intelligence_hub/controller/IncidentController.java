@@ -3,6 +3,7 @@ package com.pranav.engineering_intelligence_hub.controller;
 import com.pranav.engineering_intelligence_hub.dto.request.IncidentRequest;
 import com.pranav.engineering_intelligence_hub.dto.response.IncidentResponse;
 import com.pranav.engineering_intelligence_hub.service.IncidentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,7 +16,7 @@ public class IncidentController {
     private final IncidentService incidentService;
 
     @PostMapping("/projects/{projectId}")
-    public IncidentResponse createIncident(@RequestBody IncidentRequest req, @PathVariable Long projectId){
+    public IncidentResponse createIncident(@Valid @RequestBody IncidentRequest req, @PathVariable Long projectId){
         return incidentService.createIncident(projectId, req, req.assignedEngineerUsername());
     }
 

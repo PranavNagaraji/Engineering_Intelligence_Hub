@@ -3,12 +3,14 @@ package com.pranav.engineering_intelligence_hub.security;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -25,13 +27,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain filterChain)
         throws ServletException, IOException {
-        String authHeader=req.getHeader("Authorization");
-        if(authHeader==null || !authHeader.startsWith("Bearer ")){
+        Cookie[] cookies=req.getCookies();
+        if(cookies==null){
+            filterChain.doFilter(req, res);
+            return;
+        }
+        String token=null;
+        for(Cookie cookie:cookies){
+            if("jwt".equals(cookie.getName())){
+                token=cookie.getValue();
+                break;
+            }
+        }
+        if(token==null){
             filterChain.doFilter(req, res);
             return;
         }
         try{
-            String token=authHeader.substring(7);
             String username=jwtService.extractUsername(token);
             if(username!=null && SecurityContextHolder.getContext().getAuthentication()==null){
                 UserDetails userDetails=customUserDetailsService.loadUserByUsername(username);
@@ -48,7 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
-        } catch(JwtException e){
+        } catch(JwtException |UsernameNotFoundException e){
             //ignore
         }
         filterChain.doFilter(req, res);

@@ -3,6 +3,7 @@ package com.pranav.engineering_intelligence_hub.controller;
 import com.pranav.engineering_intelligence_hub.dto.request.DocumentRequest;
 import com.pranav.engineering_intelligence_hub.dto.response.DocumentResponse;
 import com.pranav.engineering_intelligence_hub.service.DocumentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,7 +16,7 @@ public class DocumentController {
     private final DocumentService documentService;
 
     @PostMapping("/projects/{projectId}")
-    public DocumentResponse createDocument(@PathVariable Long projectId, @RequestBody DocumentRequest documentRequest){
+    public DocumentResponse createDocument(@PathVariable Long projectId, @Valid @RequestBody DocumentRequest documentRequest){
         return documentService.createDocument(projectId, documentRequest);
     }
 

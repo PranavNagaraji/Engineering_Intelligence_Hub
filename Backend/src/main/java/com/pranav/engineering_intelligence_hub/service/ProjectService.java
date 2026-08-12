@@ -34,6 +34,9 @@ public class ProjectService {
         Team team=teamRepository.findById(req.teamId()).orElseThrow(()-> new TeamNotFoundException(req.teamId()));
         Project project=projectMapper.toEntity(req, team);
         User currentUser=userService.getCurrentUser();
+        if(currentUser.getRole()!=Role.ADMIN && !currentUser.getTeams().contains(team)){
+            throw new AccessDeniedException("You are not allowed to perform this action");
+        }
         Project createdProject=projectRepository.save(project);
         auditService.log(
                 AuditEvent.PROJECT_CREATED,

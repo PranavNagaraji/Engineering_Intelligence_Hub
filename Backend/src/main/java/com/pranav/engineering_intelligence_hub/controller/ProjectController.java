@@ -3,6 +3,7 @@ package com.pranav.engineering_intelligence_hub.controller;
 import com.pranav.engineering_intelligence_hub.dto.request.ProjectRequest;
 import com.pranav.engineering_intelligence_hub.dto.response.ProjectResponse;
 import com.pranav.engineering_intelligence_hub.service.ProjectService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,7 +16,7 @@ public class ProjectController {
     private final ProjectService projectService;
 
     @PostMapping
-    public ProjectResponse createProject(@RequestBody ProjectRequest req) {
+    public ProjectResponse createProject(@Valid @RequestBody ProjectRequest req) {
         return projectService.createProject(req);
     }
 

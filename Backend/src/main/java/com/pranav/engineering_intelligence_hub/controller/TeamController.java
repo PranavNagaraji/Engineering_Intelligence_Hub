@@ -2,8 +2,8 @@ package com.pranav.engineering_intelligence_hub.controller;
 
 import com.pranav.engineering_intelligence_hub.dto.request.TeamRequest;
 import com.pranav.engineering_intelligence_hub.dto.response.TeamResponse;
-import com.pranav.engineering_intelligence_hub.entity.Team;
 import com.pranav.engineering_intelligence_hub.service.TeamService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,7 +14,7 @@ public class TeamController {
     private final TeamService teamService;
 
     @PostMapping
-    public TeamResponse createTeam(@RequestBody TeamRequest teamRequest){
+    public TeamResponse createTeam(@Valid @RequestBody TeamRequest teamRequest){
         return teamService.createTeam(teamRequest);
     }
 

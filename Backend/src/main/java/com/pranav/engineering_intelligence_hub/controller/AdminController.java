@@ -2,7 +2,6 @@ package com.pranav.engineering_intelligence_hub.controller;
 
 import com.pranav.engineering_intelligence_hub.dto.response.DashboardResponse;
 import com.pranav.engineering_intelligence_hub.dto.response.UserResponse;
-import com.pranav.engineering_intelligence_hub.entity.User;
 import com.pranav.engineering_intelligence_hub.service.DashboardService;
 import com.pranav.engineering_intelligence_hub.service.UserService;
 import lombok.RequiredArgsConstructor;
