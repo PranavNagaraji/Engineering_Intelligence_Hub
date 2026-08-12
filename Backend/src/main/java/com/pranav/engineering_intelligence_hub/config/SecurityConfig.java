@@ -1,6 +1,8 @@
 package com.pranav.engineering_intelligence_hub.config;
 
 import com.pranav.engineering_intelligence_hub.security.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +16,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.*;
+
+import java.util.function.Supplier;
 
 @Configuration
 @EnableWebSecurity
@@ -24,21 +28,45 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    private static final class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
+        private final CsrfTokenRequestHandler plain = new CsrfTokenRequestAttributeHandler();
+        private final CsrfTokenRequestHandler xor = new XorCsrfTokenRequestAttributeHandler();
+
+        @Override
+        public void handle(HttpServletRequest request, HttpServletResponse response, Supplier<CsrfToken> csrfToken ) {
+            xor.handle(request, response, csrfToken);
+            csrfToken.get();
+        }
+
+        @Override
+        public String resolveCsrfTokenValue(HttpServletRequest request, CsrfToken csrfToken) {
+            String headerValue = request.getHeader(csrfToken.getHeaderName());
+            if (headerValue != null) {
+                return plain.resolveCsrfTokenValue(request, csrfToken);
+            }
+            return xor.resolveCsrfTokenValue(request, csrfToken);
+        }
+
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         http
             .cors(cors->{})
             .csrf(csrf -> csrf.csrfTokenRepository(
-                    CookieCsrfTokenRepository.withHttpOnlyFalse()
-            ))
+                CookieCsrfTokenRepository.withHttpOnlyFalse()
+                ).csrfTokenRequestHandler(
+                        new SpaCsrfTokenRequestHandler()
+                )
+            )
             .formLogin(form->form.disable())
             .httpBasic(basic->basic.disable())
             .authorizeHttpRequests(auth->auth
-                    .requestMatchers("/api/auth/**").permitAll()
-                    .anyRequest().authenticated()
+                .requestMatchers("/api/auth/**").permitAll()
+                .anyRequest().authenticated()
             )
             .sessionManagement(session->
-                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .addFilterBefore(
                     jwtAuthenticationFilter,
